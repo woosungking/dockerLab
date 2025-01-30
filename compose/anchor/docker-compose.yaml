@@ -1,0 +1,34 @@
+version: '3.8'
+
+# 공통 설정 정의 (앵커 사용)
+x-common:
+  &common
+  restart: always
+  volumes:
+    - my-vol:/code  # my-vol 볼륨을 /code 디렉토리에 마운트
+  environment:
+    &default-env
+    BY: "x-common.by"  # 기본 환경 변수
+
+# 서비스 정의
+services:
+  ubuntu:
+    <<: *common  # x-common에서 정의한 공통 설정을 재사용
+    environment:
+      <<: *default-env  # 기본 환경 변수들 적용
+      FROM: "service.from"  # 서비스 특화 'FROM' 값
+      BY: "service.by"      # 서비스 특화 'BY' 값 (기존 'x-common'의 값 덮어쓰기)
+    entrypoint: /bin/bash   # 기본 엔트리포인트 설정
+    command:
+      - -c
+      - echo "FROM = ${FROM} | BY = ${BY}"  # 환경 변수 출력
+    restart: no  # 컨테이너 종료 시 재시작 안함
+    image: ubuntu:22.04  # 사용할 베이스 이미지 (Ubuntu 22.04)
+    volumes:
+      - my-vol:/code  # 'my-vol' 볼륨을 /code 경로에 마운트
+
+# 볼륨 정의 (docker-compose.yml에서 볼륨을 명시적으로 정의해야 제대로 동작)
+volumes:
+  my-vol:
+    name: mavol  # 실제 볼륨 이름
+    external: false  # docker-compose가 관리하는 내부 볼륨
